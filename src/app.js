@@ -1,36 +1,36 @@
 const express = require("express");
+const connectDB = require("./config/database");
+const User = require("./models/user");
 
 const app = express();
 
-app.get("/getUserData", (req, res, next) => {
+app.post("/signup", async (req, res) => {
+  const userObj = {
+    firstName: "Akshay",
+    lastName: "Saini",
+    email: "akshay@saini.com",
+    password: "akshaykapassword",
+  };
+  const user1 = User(userObj);
+
+  // always do error handling, otherwise we wil always get "User created successfully!" even when user is not created in database.
   try {
-    // Logic of DB call and get user data
-    if (true) {
-      throw new Error("Some error occured. Contact support.");
-    }
-    res.send("User data sent!");
+    await user1.save();
+    res.send("User created successfully!");
   } catch (err) {
-    // res.status(500).send(err.message);
-    // or we can write below, which will call a middleware request handler with err in its parameter
-    next(err);
+    res.status(400).send("Error creating the user: " + err.message);
   }
 });
 
-// this will not run unless next() is written in previous request handler.
-app.use("/getUserData", (req, res) => {
-  res.send("this res sent!");
-});
+// we are doing like this so that first database should be connected and then server should start listening for requrests. Otherwise server starts listening first and database connected later on, so this can cause error when someone sent request for database.
+connectDB()
+  .then(() => {
+    console.log("Database connected successfully!");
 
-// this "/" will handle all routes, so always keep it towards the end.
-// this below have err in the request handler, so Express sees the thrown error and looks for an error-handling middleware (a middleware with signature (err, req, res, next)). If found, Express calls it with the error. No need to do next() in any previous request handler.
-// AI said - this error-handling middleware’s mount path ("/") is unusual but works; typical pattern is app.use((err, req, res, next) => { ... }) so it applies to all routes.
-app.use("/", (err, req, res, next) => {
-  if (err) {
-    // Log your error for me developer
-    res.status(500).send(err.message || "Something went wrong.");
-  }
-});
-
-app.listen(4000, () => {
-  console.log("Server is successfully listening on port 4000...");
-});
+    app.listen(4000, () => {
+      console.log("Server is successfully listening on port 4000...");
+    });
+  })
+  .catch((err) => {
+    console.error("Database cannot be connected!!");
+  });
