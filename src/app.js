@@ -1,20 +1,17 @@
-require('dotenv').config();
+require("dotenv").config();
 const express = require("express");
 const connectDB = require("./config/database");
 const User = require("./models/user");
 
 const app = express();
 
-app.post("/signup", async (req, res) => {
-  const userObj = {
-    firstName: "Akshay",
-    lastName: "Saini",
-    email: "akshay@saini.com",
-    password: "akshaykapassword",
-  };
-  const user1 = User(userObj);
+// Middleware to read or accept json from requests. Without writing this, if we console.log(req.body) we will get undefined.
+app.use(express.json());
 
-  // always do error handling, otherwise we wil always get "User created successfully!" even when user is not created in database.
+app.post("/signup", async (req, res) => {
+  // creating a new instance of the User model
+  const user1 = new User(req.body);
+
   try {
     await user1.save();
     res.send("User created successfully!");
@@ -23,7 +20,6 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// we are doing like this so that first database should be connected and then server should start listening for requrests. Otherwise server starts listening first and database connected later on, so this can cause error when someone sent request for database.
 connectDB()
   .then(() => {
     console.log("Database connected successfully!");
