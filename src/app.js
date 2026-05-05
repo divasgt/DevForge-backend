@@ -8,6 +8,32 @@ const app = express();
 // Middleware to read or accept json from requests. Without writing this, if we console.log(req.body) we will get undefined.
 app.use(express.json());
 
+// GET /user api, get user by email
+app.get("/user", async (req, res) => {
+  const userEmail = req.body.email;
+  // console.log(userEmail);
+  try {
+    const users = await User.find({ email: userEmail });
+    if (users.length != 0) {
+      res.send(users);
+    } else {
+      res.status(404).send("User not found");
+    }
+  } catch (err) {
+    res.status(400).send("Something went wrong!");
+  }
+});
+
+// GET /feed api, get all users
+app.get("/feed", async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.send(users);
+  } catch (err) {
+    res.status(400).send("Something went wrong!");
+  }
+});
+
 app.post("/signup", async (req, res) => {
   // creating a new instance of the User model
   const user1 = new User(req.body);
