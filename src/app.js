@@ -62,20 +62,22 @@ app.delete("/user", async (req, res) => {
   }
 });
 
-// Update user with email id
+// Update user with email id, here when invalid gender is passed, idk why error is not being handled
 app.patch("/user", async (req, res) => {
   const { email: userEmail, newData } = req.body; // this is destructuring, using email field as userEmail variable
   console.log(userEmail, newData);
   try {
-    const result = await User.updateOne({ email: userEmail }, { ...newData });
+    const result = await User.updateOne(
+      { email: userEmail },
+      { ...newData },
+      { runValidators: true },
+    );
     console.log(result);
     if (result.matchedCount === 1 && result.modifiedCount === 1) {
       res.send("User data updated successfully!");
-    } else {
-      res.status(400).send("User not found!");
     }
   } catch (err) {
-    res.send(400).send("Something went wrong!");
+    res.send(400).send("Update failed: " + err.message);
   }
 });
 
