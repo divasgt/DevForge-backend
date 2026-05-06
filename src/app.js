@@ -45,6 +45,7 @@ app.get("/findById", async (req, res) => {
   }
 });
 
+// delete user
 app.delete("/user", async (req, res) => {
   const userId = req.body.id;
   try {
@@ -68,7 +69,7 @@ app.patch("/user", async (req, res) => {
   try {
     const result = await User.updateOne({ email: userEmail }, { ...newData });
     console.log(result);
-    if (result.matchedCount === 1 && result.upsertedCount === 1) {
+    if (result.matchedCount === 1 && result.modifiedCount === 1) {
       res.send("User data updated successfully!");
     } else {
       res.status(400).send("User not found!");
