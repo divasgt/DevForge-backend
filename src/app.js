@@ -62,6 +62,34 @@ app.delete("/user", async (req, res) => {
   }
 });
 
+// Update user by its id
+app.patch("/user/:userId", async (req, res) => {
+  const userId = req.params.userId;
+  const data = req.body;
+
+  const ALLOWED_UPDATES = ["photoUrl", "about", "gender", "age", "skills"];
+  // check if each of the fields in data is in allowed updates array or not
+  const isUpdateAllowed = Object.keys(data).every((k) =>
+    ALLOWED_UPDATES.includes(k),
+  );
+
+  try {
+    if (!isUpdateAllowed) {
+      throw new Error("Update not allowed!");
+    }
+    if (data?.skills?.length > 10) {
+      throw new Error("Skills cannot be more than 10!");
+    }
+    const user = await User.findByIdAndUpdate(userId, data, {
+      returnDocument: "after",
+      runValidators: true,
+    });
+    res.send("User updated successfully!");
+  } catch (err) {
+    res.status(400).send("Update failed: " + err?.message);
+  }
+});
+
 // Update user with email id, here when invalid gender is passed, idk why error is not being handled
 app.patch("/user", async (req, res) => {
   const { email: userEmail, newData } = req.body; // this is destructuring, using email field as userEmail variable
@@ -84,9 +112,27 @@ app.patch("/user", async (req, res) => {
 // Create new user
 app.post("/signup", async (req, res) => {
   // creating a new instance of the User model
-  const user1 = new User(req.body);
+  const data = req.body;
+  const ALLOWED_INSERTIONS = [
+    "firstName",
+    "lastName",
+    "email",
+    "password",
+    "age",
+    "gender",
+    "photoUrl",
+    "about",
+    "skills",
+  ];
+  const isInsertAllowed = Object.keys(data).every((k) =>
+    ALLOWED_INSERTIONS.includes(k),
+  );
 
   try {
+    if (!isInsertAllowed) {
+      throw new Error("Signup data not appropriate!");
+    }
+    const user1 = new User(data);
     await user1.save();
     res.send("User created successfully!");
   } catch (err) {
