@@ -2,6 +2,8 @@ require("dotenv").config();
 const express = require("express");
 const connectDB = require("./config/database");
 const User = require("./models/user");
+const { validateSignUpData } = require("./utils/validation");
+const bcrypt = require("bcrypt");
 
 const app = express();
 
@@ -111,7 +113,6 @@ app.patch("/user", async (req, res) => {
 
 // Create new user
 app.post("/signup", async (req, res) => {
-  // creating a new instance of the User model
   const data = req.body;
   const ALLOWED_INSERTIONS = [
     "firstName",
@@ -132,7 +133,18 @@ app.post("/signup", async (req, res) => {
     if (!isInsertAllowed) {
       throw new Error("Signup data not appropriate!");
     }
-    const user1 = new User(data);
+
+    // Validating data
+    validateSignUpData(req);
+
+    // Encrypting password
+    const { password } = data;
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user1 = new User({
+      ...data,
+      password: passwordHash,
+    });
     await user1.save();
     res.send("User created successfully!");
   } catch (err) {
