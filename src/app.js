@@ -111,6 +111,29 @@ app.patch("/user", async (req, res) => {
   }
 });
 
+app.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!email || !password) {
+      throw new Error("Email and password are required.");
+    }
+
+    if (!user) {
+      throw new Error("Invalid email id or password.");
+    }
+
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      throw new Error("Invalid email id or password");
+    } else {
+      res.send("Login successful!");
+    }
+  } catch (err) {
+    res.status(400).send("Error: " + err.message);
+  }
+});
+
 // Create new user
 app.post("/signup", async (req, res) => {
   const data = req.body;
