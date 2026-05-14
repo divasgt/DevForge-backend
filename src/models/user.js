@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
 const userSchema = new mongoose.Schema(
   {
@@ -56,7 +58,7 @@ const userSchema = new mongoose.Schema(
     },
     photoUrl: {
       type: String,
-      default: "someDefaultImageUrl",
+      default: "https://someDefaultImageUrl.com",
       trim: true,
       minlength: 10,
       validate(value) {
@@ -78,6 +80,25 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+// Function to validate password
+userSchema.methods.getJWT = async function () {
+  const token = await jwt.sign({ _id: this._id }, "DEV@Tinder$790", {
+    expiresIn: "7d",
+  });
+
+  return token;
+};
+
+// Function to create a JWT token
+userSchema.methods.validatePassword = async function (passwordInputByUser) {
+  const passwordHash = this.password;
+  const isPasswordValid = await bcrypt.compare(
+    passwordInputByUser,
+    passwordHash,
+  );
+  return isPasswordValid;
+};
 
 const User = mongoose.model("User", userSchema);
 
