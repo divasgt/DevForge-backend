@@ -12,4 +12,10 @@ const validateSignUpData = (req) => {
   }
 };
 
-module.exports = { validateSignUpData };
+const validatePassword = (password) => {
+  if (!validator.isStrongPassword(password)) {
+    throw new Error("Password is not strong!");
+  }
+};
+
+module.exports = { validateSignUpData, validatePassword };
