@@ -4,10 +4,12 @@ const connectionRequestSchema = new mongoose.Schema(
   {
     fromUserId: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // reference to the user collection
       required: true,
     },
     toUserId: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
     status: {
@@ -22,6 +24,7 @@ const connectionRequestSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+// 1 means ascending, -1 means descending, (not sure, see docs to know more)
 connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 });
 
 // this is like a middleware, this wil be called before save method (before saving any collection)
