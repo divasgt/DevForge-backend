@@ -6,9 +6,17 @@ const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/request");
 const userRouter = require("./routes/user");
+const cors = require("cors");
 
 const app = express();
 
+// to allow requests from this specified origin (frontend)
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  }),
+);
 // Middleware to read or accept json from requests. Without writing this, if we console.log(req.body) we will get undefined.
 app.use(express.json());
 // Middleware to read cookies, without writing this, if we console.log(req.cookies) we get undefined.
@@ -23,8 +31,9 @@ connectDB()
   .then(() => {
     console.log("Database connected successfully!");
 
-    app.listen(4000, () => {
-      console.log("Server is successfully listening on port 4000...");
+    const port = process.env.PORT;
+    app.listen(port, () => {
+      console.log(`Server is successfully listening on port ${port}...`);
     });
   })
   .catch((err) => {
