@@ -22,6 +22,7 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
     const ALLOWED_FIELDS = [
       "firstName",
       "lastName",
+      "age",
       "gender",
       "photoUrl",
       "about",
