@@ -78,10 +78,78 @@ const userSchema = new mongoose.Schema(
       default: "Hi there! I'm using DevTinder",
       trim: true,
       minLength: 1,
-      maxLength: 255,
+      maxLength: 500,
     },
     skills: {
       type: [String],
+      validate: [
+        {
+          validator: function (v) {
+            return !v || v.length <= 20;
+          },
+          message: "You can have at most 20 skills.",
+        },
+      ],
+    },
+    socialLinks: {
+      type: [
+        {
+          title: {
+            type: String,
+            trim: true,
+            minLength: 1,
+            maxLength: 50,
+          },
+          url: {
+            type: String,
+            trim: true,
+            minlength: 10,
+            maxlength: 500,
+            validate(value) {
+              if (!validator.isURL(value)) {
+                throw new Error("URL is not valid: " + value);
+              }
+            },
+          },
+        },
+      ],
+      validate: [
+        {
+          validator: function (v) {
+            return !v || v.length <= 5;
+          },
+          message: "You can have at most 5 social links.",
+        },
+      ],
+    },
+    specialization: {
+      type: String,
+      trim: true,
+      minLength: 1,
+      maxLength: 100,
+    },
+    experience: {
+      type: Number,
+      min: 0,
+      max: 60,
+    },
+    city: {
+      type: String,
+      trim: true,
+      minLength: 1,
+      maxLength: 100,
+    },
+    country: {
+      type: String,
+      trim: true,
+      minLength: 1,
+      maxLength: 100,
+    },
+    lookingFor: {
+      type: String,
+      trim: true,
+      minLength: 1,
+      maxLength: 500,
     },
   },
   { timestamps: true },
