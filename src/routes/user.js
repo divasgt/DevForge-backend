@@ -101,4 +101,21 @@ userRouter.get("/feed", userAuth, async (req, res) => {
   }
 });
 
+userRouter.get("/user/ignored-users", userAuth, async (req, res) => {
+  try {
+    const loggedInUser = req.user;
+
+    const connectionRequests = await ConnectionRequest.find({
+      status: "ignored",
+      fromUserId: loggedInUser._id,
+    }).populate("toUserId", SAFE_USER_DATA);
+
+    const ignoredUsers = connectionRequests.map((row) => row.toUserId);
+
+    res.json({ message: "Data fetched sucessfully!", data: ignoredUsers });
+  } catch (err) {
+    res.status(400).send("Error: " + err.message);
+  }
+});
+
 module.exports = userRouter;
