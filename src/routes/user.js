@@ -5,7 +5,7 @@ const User = require("../models/user");
 
 const userRouter = express.Router();
 
-const SAFE_USER_DATA = "firstName lastName photoUrl age gender about skills";
+const SAFE_USER_DATA = "firstName lastName photoUrl age gender about skills socialLinks specialization experience city country lookingFor";
 
 // get all pending connection request for logged in user
 userRouter.get("/user/request/recieved", userAuth, async (req, res) => {
@@ -115,6 +115,21 @@ userRouter.get("/user/ignored-users", userAuth, async (req, res) => {
     res.json({ message: "Data fetched sucessfully!", data: ignoredUsers });
   } catch (err) {
     res.status(400).send("Error: " + err.message);
+  }
+});
+
+userRouter.get("/user/:userId", userAuth, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId).select(SAFE_USER_DATA);
+
+    if (!user) {
+      throw new Error("User not found!");
+    }
+
+    res.json({ data: user });
+  } catch (err) {
+    res.status(400).send("ERROR: " + err.message);
   }
 });
 
