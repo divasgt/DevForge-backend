@@ -64,7 +64,6 @@ const userSchema = new mongoose.Schema(
     },
     photoUrl: {
       type: String,
-      default: "https://someDefaultImageUrl.com",
       trim: true,
       minlength: 10,
       validate(value) {
