@@ -22,11 +22,19 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
     const ALLOWED_FIELDS = [
       "firstName",
       "lastName",
+      "photoUrl",
       "age",
       "gender",
-      "photoUrl",
+      "specialization",
+      "experience",
+      "city",
+      "country",
+      "socialLinks",
       "about",
       "skills",
+      "lookingFor",
+      "company",
+      "contactEmail",
     ];
 
     const isEditAllowed = Object.keys(newData).every((field) =>

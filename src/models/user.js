@@ -78,7 +78,7 @@ const userSchema = new mongoose.Schema(
       default: "Hi there! I'm using DevTinder",
       trim: true,
       minLength: 1,
-      maxLength: 500,
+      maxLength: 1000,
     },
     skills: {
       type: [String],
@@ -149,7 +149,24 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
       minLength: 1,
-      maxLength: 500,
+      maxLength: 1000,
+    },
+    company: {
+      type: String,
+      trim: true,
+      minLength: 1,
+      maxLength: 100,
+    },
+    contactEmail: {
+      type: String,
+      trim: true,
+      minLength: 5,
+      maxLength: 100,
+      validate(value) {
+        if (!validator.isEmail(value)) {
+          throw new Error("Email address is not valid: " + value);
+        }
+      },
     },
   },
   { timestamps: true },
