@@ -45,7 +45,13 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
       throw new Error("Invalid edit request!");
     } else {
       // updating the fields in user object
-      Object.keys(newData).forEach((field) => (user[field] = newData[field]));
+      Object.keys(newData).forEach((field) => {
+        if (newData[field] === "" || newData[field] === null) {
+          user[field] = undefined;
+        } else {
+          user[field] = newData[field];
+        }
+      });
       await user.save();
 
       res.json({
