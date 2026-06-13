@@ -122,13 +122,33 @@ userRouter.get("/user/ignored-users", userAuth, async (req, res) => {
 userRouter.get("/user/:userId", userAuth, async (req, res) => {
   try {
     const { userId } = req.params;
+    const loggedInUser = req.user;
+
     const user = await User.findById(userId).select(SAFE_USER_DATA);
 
     if (!user) {
       throw new Error("User not found!");
     }
 
-    res.json({ data: user });
+    let connectionData = null;
+    if (userId.toString() !== loggedInUser._id.toString()) {
+      const connectionRequest = await ConnectionRequest.findOne({
+        $or: [
+          { fromUserId: loggedInUser._id, toUserId: userId },
+          { fromUserId: userId, toUserId: loggedInUser._id },
+        ],
+      });
+
+      if (connectionRequest) {
+        connectionData = {
+          _id: connectionRequest._id,
+          status: connectionRequest.status,
+          senderId: connectionRequest.fromUserId,
+        };
+      }
+    }
+
+    res.json({ data: user, connectionData });
   } catch (err) {
     res.status(400).send("ERROR: " + err.message);
   }
