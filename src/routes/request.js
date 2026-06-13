@@ -36,6 +36,18 @@ requestRouter.post(
         ],
       });
       if (existingConnectionRequest) {
+        // Allow overwriting a rejected request
+        if (existingConnectionRequest.status === "rejected") {
+          existingConnectionRequest.status = status;
+          existingConnectionRequest.fromUserId = fromUserId;
+          existingConnectionRequest.toUserId = toUserId;
+          const data = await existingConnectionRequest.save();
+          return res.json({
+            message: "Connection request sent sucessfully!",
+            data: data,
+          });
+        }
+
         return res
           .status(400)
           .json({ message: "Connection request already exists!" });
@@ -89,6 +101,38 @@ requestRouter.post(
       const data = await connectionRequest.save();
 
       res.json({ message: "Connection request " + status, data });
+    } catch (err) {
+      res.status(400).json({ message: "ERROR: " + err.message });
+    }
+  },
+);
+
+// Remove connection request
+requestRouter.post(
+  "/request/remove/user/:userId",
+  userAuth,
+  async (req, res) => {
+    try {
+      const loggedInUser = req.user;
+      const targetUserId = req.params.userId;
+
+      const connectionRequest = await ConnectionRequest.findOneAndDelete({
+        $or: [
+          { fromUserId: loggedInUser._id, toUserId: targetUserId },
+          { fromUserId: targetUserId, toUserId: loggedInUser._id },
+        ],
+      });
+
+      if (!connectionRequest) {
+        return res
+          .status(404)
+          .json({ message: "No connection found to remove." });
+      }
+
+      res.json({
+        message: "Connection removed successfully",
+        data: connectionRequest,
+      });
     } catch (err) {
       res.status(400).json({ message: "ERROR: " + err.message });
     }
