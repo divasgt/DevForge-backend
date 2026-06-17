@@ -1,7 +1,7 @@
 {
-  "name": "devtinder",
+  "name": "devforge-backend",
   "version": "1.0.0",
-  "description": "tinder for devs",
+  "description": "DevForge - Where developers connect and build projects",
   "keywords": [
     "nodejs",
     "javascript"
