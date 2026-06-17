@@ -74,7 +74,7 @@ const userSchema = new mongoose.Schema(
     },
     about: {
       type: String,
-      default: "Hi there! I'm using DevTinder",
+      default: "Hi there! I'm using DevForge",
       trim: true,
       minLength: 1,
       maxLength: 1000,
@@ -173,7 +173,7 @@ const userSchema = new mongoose.Schema(
 
 // Function to validate password
 userSchema.methods.getJWT = async function () {
-  const token = await jwt.sign({ _id: this._id }, "DEV@Tinder$790", {
+  const token = await jwt.sign({ _id: this._id }, process.env.JWT_SECRET, {
     expiresIn: "7d",
   });
 
