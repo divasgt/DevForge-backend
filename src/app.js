@@ -31,7 +31,7 @@ connectDB()
   .then(() => {
     console.log("Database connected successfully!");
 
-    const port = process.env.PORT;
+    const port = process.env.PORT || 7777;
     app.listen(port, () => {
       console.log(`Server is successfully listening on port ${port}...`);
     });
