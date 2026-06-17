@@ -10,13 +10,19 @@ const cors = require("cors");
 
 const app = express();
 
-// to allow requests from this specified origin (frontend)
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL,
-    credentials: true,
-  }),
-);
+// allowed origins
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:5173'
+];
+
+// to allow requests from specified origins (frontend)
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true, // Crucial if you are passing HTTP-only cookies or authorization headers
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ['Content-Type', 'Authorization', "x-requested-with"]
+}));
 // Middleware to read or accept json from requests. Without writing this, if we console.log(req.body) we will get undefined.
 app.use(express.json());
 // Middleware to read cookies, without writing this, if we console.log(req.cookies) we get undefined.
