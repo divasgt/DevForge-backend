@@ -10,6 +10,9 @@ const cors = require("cors");
 
 const app = express();
 
+// Trust reverse proxy (needed for secure cookies in production behind Render/Heroku/Vercel)
+app.set("trust proxy", 1);
+
 // allowed origins
 const allowedOrigins = [
   process.env.FRONTEND_URL,

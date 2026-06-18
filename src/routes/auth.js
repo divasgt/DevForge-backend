@@ -24,8 +24,12 @@ authRouter.post("/login", async (req, res) => {
       const token = await user.getJWT();
 
       // Add token to cookie and send to user, set expiry date
+      const isProduction = process.env.NODE_ENV === "production";
       res.cookie("token", token, {
         expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
       });
       res.send(user);
     } else {
@@ -74,8 +78,12 @@ authRouter.post("/signup", async (req, res) => {
 
     const token = await savedUser.getJWT();
     // Add token to cookie and send to user, set expiry date
+    const isProduction = process.env.NODE_ENV === "production";
     res.cookie("token", token, {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
     });
 
     res.json({ message: "User created successfully!", data: savedUser });
@@ -86,7 +94,13 @@ authRouter.post("/signup", async (req, res) => {
 
 // Logout
 authRouter.post("/logout", (req, res) => {
-  res.cookie("token", null, { expires: new Date(Date.now()) });
+  const isProduction = process.env.NODE_ENV === "production";
+  res.cookie("token", null, {
+    expires: new Date(Date.now()),
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+  });
   res.send("Logout successful!");
 });
 
