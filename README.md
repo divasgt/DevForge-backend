@@ -1,6 +1,6 @@
 # DevForge — Backend
 
-> A RESTful API for a developer networking platform — think Tinder, but for finding dev collaborators, co-founders, and project buddies.
+> A RESTful API for a developer networking platform — like a swipe-based discovery app, but for finding dev collaborators, co-founders, and project buddies.
 
 Built with **Node.js, Express 5, MongoDB (Mongoose 9), and JWT authentication.**
 
@@ -28,8 +28,8 @@ Built with **Node.js, Express 5, MongoDB (Mongoose 9), and JWT authentication.**
 
 ```bash
 # Clone
-git clone https://github.com/your-username/devtinder-backend.git
-cd devtinder-backend
+git clone https://github.com/your-username/DevForge-backend.git
+cd DevForge-backend
 
 # Install
 npm install
