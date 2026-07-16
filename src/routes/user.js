@@ -78,23 +78,50 @@ userRouter.get("/feed", userAuth, async (req, res) => {
     });
     userIdsToNotShow.push(loggedInUser._id.toString());
 
-    /* My way:
-    const allUsers = await User.find({});
-    // $nor: [{ _id: loggedInUser._id }],
-
-    const feedUsers = allUsers.filter((user) => {
-      return !userIdsToNotShow.includes(user._id.toString());
-    });
-    */
-
-    // Akshay's way:
-    // this shows all users whose id is not in userIdsToNotShow array
-    const feedUsers = await User.find({
+    const filter = {
       _id: { $nin: userIdsToNotShow },
-    })
-      .select(SAFE_USER_DATA)
-      .skip(skip)
-      .limit(limit);
+    };
+
+    // Adding filters from query params
+    if (req.query.minAge) {
+      filter.age = { $gte: Number(req.query.minAge) };
+    }
+    if (req.query.maxAge) {
+      filter.age = { ...filter.age, $lte: Number(req.query.maxAge) };
+    }
+    if (req.query.city) {
+      filter.city = { $regex: req.query.city.trim(), $options: "i" }; // case-insensitive search
+    }
+    if (req.query.country) {
+      filter.country = { $regex: req.query.country.trim(), $options: "i" };
+    }
+    if (req.query.specialization) {
+      filter.specialization = { $regex: req.query.specialization.trim(), $options: "i" };
+    }
+    if (req.query.minExp) {
+      filter.experience = { $gte: Number(req.query.minExp) };
+    }
+    if (req.query.maxExp) {
+      filter.experience = { ...filter.experience, $lte: Number(req.query.maxExp) };
+    }
+
+    const allowedCompanyValues = ["freelance", "student", "employed"];
+    if (req.query.company && allowedCompanyValues.includes(req.query.company)) {
+      filter.company = req.query.company;
+    }
+    if (req.query.skills) {
+      const skillsArray = req.query.skills
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (skillsArray.length > 0) {
+        filter.skills = {
+          $in: skillsArray.map((s) => new RegExp(`^${s}$`, "i")),
+        };
+      }
+    }
+
+    const feedUsers = await User.find(filter).select(SAFE_USER_DATA).skip(skip).limit(limit);
 
     res.json({ data: feedUsers });
   } catch (err) {
