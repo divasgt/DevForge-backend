@@ -34,6 +34,7 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
       "skills",
       "lookingFor",
       "company",
+      "status",
       "contactEmail",
     ];
 

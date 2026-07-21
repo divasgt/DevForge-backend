@@ -6,7 +6,7 @@ const User = require("../models/user");
 const userRouter = express.Router();
 
 const SAFE_USER_DATA =
-  "firstName lastName photoUrl age gender about skills socialLinks specialization experience city country lookingFor company contactEmail";
+  "firstName lastName photoUrl age gender about skills socialLinks specialization experience city country lookingFor company status contactEmail";
 
 // get all pending connection request for logged in user
 userRouter.get("/user/request/recieved", userAuth, async (req, res) => {
@@ -105,9 +105,16 @@ userRouter.get("/feed", userAuth, async (req, res) => {
       filter.experience = { ...filter.experience, $lte: Number(req.query.maxExp) };
     }
 
-    const allowedCompanyValues = ["freelance", "student", "employed"];
-    if (req.query.company && allowedCompanyValues.includes(req.query.company)) {
-      filter.company = req.query.company;
+    const allowedStatusValues = ["employed", "self-employed", "freelance", "student", "hobbyist"];
+    if (req.query.status) {
+      const statusArray = req.query.status
+        .split(",")
+        .map((c) => c.trim().toLowerCase())
+        .filter((c) => allowedStatusValues.includes(c));
+        
+      if (statusArray.length > 0) {
+        filter.status = { $in: statusArray };
+      }
     }
     if (req.query.skills) {
       const skillsArray = req.query.skills

@@ -156,6 +156,16 @@ const userSchema = new mongoose.Schema(
       minLength: 1,
       maxLength: 100,
     },
+    status: {
+      type: String,
+      trim: true,
+      minLength: 1,
+      maxLength: 100,
+      enum: {
+        values: ["employed", "self-employed", "freelance", "student", "hobbyist"],
+        message: `{VALUE} is not a valid status type.`,
+      },
+    },
     contactEmail: {
       type: String,
       trim: true,
@@ -168,7 +178,7 @@ const userSchema = new mongoose.Schema(
       },
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 // Function to validate password
@@ -183,10 +193,7 @@ userSchema.methods.getJWT = async function () {
 // Function to create a JWT token
 userSchema.methods.validatePassword = async function (passwordInputByUser) {
   const passwordHash = this.password;
-  const isPasswordValid = await bcrypt.compare(
-    passwordInputByUser,
-    passwordHash,
-  );
+  const isPasswordValid = await bcrypt.compare(passwordInputByUser, passwordHash);
   return isPasswordValid;
 };
 
