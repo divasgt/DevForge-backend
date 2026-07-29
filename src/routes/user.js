@@ -96,7 +96,15 @@ userRouter.get("/feed", userAuth, async (req, res) => {
       filter.country = { $regex: req.query.country.trim(), $options: "i" };
     }
     if (req.query.specialization) {
-      filter.specialization = { $regex: req.query.specialization.trim(), $options: "i" };
+      const specArray = req.query.specialization
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (specArray.length > 0) {
+        filter.specialization = {
+          $in: specArray.map((s) => new RegExp(`^${s}$`, "i")),
+        };
+      }
     }
     if (req.query.minExp) {
       filter.experience = { $gte: Number(req.query.minExp) };
@@ -111,7 +119,7 @@ userRouter.get("/feed", userAuth, async (req, res) => {
         .split(",")
         .map((c) => c.trim().toLowerCase())
         .filter((c) => allowedStatusValues.includes(c));
-        
+
       if (statusArray.length > 0) {
         filter.status = { $in: statusArray };
       }
