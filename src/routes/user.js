@@ -2,6 +2,7 @@ const express = require("express");
 const { userAuth } = require("../middlewares/auth");
 const ConnectionRequest = require("../models/connectionRequest");
 const User = require("../models/user");
+const { parsePromptWithAI } = require("../services/aiService");
 
 const userRouter = express.Router();
 
@@ -193,6 +194,22 @@ userRouter.get("/user/:userId", userAuth, async (req, res) => {
     res.json({ data: user, connectionData });
   } catch (err) {
     res.status(400).send("ERROR: " + err.message);
+  }
+});
+
+// AI Search for Feed
+userRouter.post("/feed/ai-search", userAuth, async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    if (!prompt) {
+      return res.status(400).json({ message: "Search prompt is required" });
+    }
+
+    const filters = await parsePromptWithAI(prompt);
+    res.json({ message: "Successfully parsed search prompt", data: filters });
+  } catch (err) {
+    console.error("AI Search API Error:", err);
+    res.status(500).json({ message: err.message || "Failed to process AI search" });
   }
 });
 
