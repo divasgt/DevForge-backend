@@ -19,9 +19,13 @@ userRouter.get("/user/request/recieved", userAuth, async (req, res) => {
       status: "interested",
     }).populate("fromUserId", SAFE_USER_DATA);
 
+    const validRequests = connectionRequests.filter(
+      (req) => req.fromUserId != null
+    );
+
     res.json({
       message: "Data fetched sucessfully.",
-      data: connectionRequests,
+      data: validRequests,
     });
   } catch (err) {
     res.status(400).send("ERROR: " + err.message);
@@ -41,13 +45,15 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
       .populate("fromUserId", SAFE_USER_DATA)
       .populate("toUserId", SAFE_USER_DATA);
 
-    const connections = connectionRequests.map((row) => {
-      if (row.fromUserId._id.toString() === loggedInUser._id.toString()) {
-        return row.toUserId;
-      } else {
-        return row.fromUserId;
-      }
-    });
+    const connections = connectionRequests
+      .filter((row) => row.fromUserId != null && row.toUserId != null)
+      .map((row) => {
+        if (row.fromUserId._id.toString() === loggedInUser._id.toString()) {
+          return row.toUserId;
+        } else {
+          return row.fromUserId;
+        }
+      });
 
     res.json({
       message: "Data fetched sucessfully.",
@@ -154,7 +160,9 @@ userRouter.get("/user/ignored-users", userAuth, async (req, res) => {
       fromUserId: loggedInUser._id,
     }).populate("toUserId", SAFE_USER_DATA);
 
-    const ignoredUsers = connectionRequests.map((row) => row.toUserId);
+    const ignoredUsers = connectionRequests
+      .filter((row) => row.toUserId != null)
+      .map((row) => row.toUserId);
 
     res.json({ message: "Data fetched sucessfully!", data: ignoredUsers });
   } catch (err) {
