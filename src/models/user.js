@@ -181,7 +181,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Function to validate password
+// Function to create a JWT token
 userSchema.methods.getJWT = async function () {
   const token = await jwt.sign({ _id: this._id }, process.env.JWT_SECRET, {
     expiresIn: "7d",
@@ -190,7 +190,7 @@ userSchema.methods.getJWT = async function () {
   return token;
 };
 
-// Function to create a JWT token
+// Function to validate password
 userSchema.methods.validatePassword = async function (passwordInputByUser) {
   const passwordHash = this.password;
   const isPasswordValid = await bcrypt.compare(passwordInputByUser, passwordHash);
