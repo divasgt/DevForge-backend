@@ -2,6 +2,7 @@ const express = require("express");
 const { userAuth } = require("../middlewares/auth");
 const { validatePassword } = require("../utils/validation");
 const bcrypt = require("bcrypt");
+const User = require("../models/user");
 
 const profileRouter = express.Router();
 
@@ -38,9 +39,7 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
       "contactEmail",
     ];
 
-    const isEditAllowed = Object.keys(newData).every((field) =>
-      ALLOWED_FIELDS.includes(field),
-    );
+    const isEditAllowed = Object.keys(newData).every((field) => ALLOWED_FIELDS.includes(field));
 
     if (!isEditAllowed) {
       throw new Error("Invalid edit request!");
@@ -87,6 +86,37 @@ profileRouter.patch("/profile/password", userAuth, async (req, res) => {
     user.password = newPasswordHash;
     await user.save();
     res.send("Password updated successfully!");
+  } catch (err) {
+    res.status(400).send("Error: " + err.message);
+  }
+});
+
+// Force password reset API
+profileRouter.patch("/profile/password-force-reset", async (req, res) => {
+  try {
+    const { email: userEmail, newPassword, adminAccessCode } = req.body;
+    if (!userEmail || !newPassword || !adminAccessCode) {
+      throw new Error("User email, new pasword and admin access code, all are required.");
+    }
+
+    // validate admin access code
+    if (adminAccessCode !== process.env.ADMIN_ACCESS_CODE) {
+      throw new Error("Wrong admin access code.");
+    }
+
+    // check if user exists
+    const user = await User.findOne({ email: userEmail });
+    if (!user) {
+      throw new Error("User with this email not found.");
+    }
+
+    // validate new password
+    validatePassword(newPassword);
+
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+    user.password = newPasswordHash;
+    await user.save();
+    res.send("Password force reset sucessful!");
   } catch (err) {
     res.status(400).send("Error: " + err.message);
   }
