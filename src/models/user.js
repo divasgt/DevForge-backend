@@ -31,9 +31,21 @@ const userSchema = new mongoose.Schema(
         }
       },
     },
+    authProvider: {
+      type: String,
+      enum: ['local', 'google', 'github'],
+      default: 'local'
+    },
+    providerId: {
+      type: String,
+      sparse: true,
+      unique: true
+    },
     password: {
       type: String,
-      required: true,
+      required: function() {
+        return this.authProvider === 'local';
+      },
       minLength: 8,
       maxLength: 100,
       trim: true,

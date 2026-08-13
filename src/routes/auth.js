@@ -2,6 +2,7 @@ const express = require("express");
 const User = require("../models/user");
 const { validateSignUpData } = require("../utils/validation");
 const bcrypt = require("bcrypt");
+const axios = require("axios");
 
 const authRouter = express.Router();
 
@@ -102,6 +103,100 @@ authRouter.post("/logout", (req, res) => {
     sameSite: isProduction ? "none" : "lax",
   });
   res.send("Logout successful!");
+});
+
+// GitHub Login
+authRouter.post("/github", async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code) {
+      throw new Error("Missing GitHub authorization code.");
+    }
+
+    // Exchange code for access token
+    const tokenResponse = await axios.post('https://github.com/login/oauth/access_token', {
+      client_id: process.env.GITHUB_CLIENT_ID,
+      client_secret: process.env.GITHUB_CLIENT_SECRET,
+      code,
+    }, {
+      headers: {
+        accept: 'application/json'
+      }
+    });
+
+    const accessToken = tokenResponse.data.access_token;
+    if (!accessToken) {
+      throw new Error("Failed to get GitHub access token");
+    }
+
+    // Get user profile
+    const userResponse = await axios.get('https://api.github.com/user', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'DevForge',
+      }
+    });
+
+    const githubUser = userResponse.data;
+    
+    // Get user email
+    const emailResponse = await axios.get('https://api.github.com/user/emails', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'DevForge',
+      }
+    });
+    
+    const primaryEmailObj = emailResponse.data.find(e => e.primary) || emailResponse.data[0];
+    const email = primaryEmailObj ? primaryEmailObj.email : null;
+
+    if (!email) {
+      throw new Error("No email found in GitHub account.");
+    }
+
+    let user = await User.findOne({ email });
+    let isNewUser = false;
+    
+    if (!user) {
+      isNewUser = true;
+      const nameParts = (githubUser.name || githubUser.login).split(" ");
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(" ") || undefined;
+      
+      user = new User({
+        firstName,
+        lastName,
+        email,
+        photoUrl: githubUser.avatar_url || "https://geographyandyou.com/images/user-profile.png",
+        authProvider: "github",
+        providerId: githubUser.id.toString(),
+      });
+      await user.save();
+    } else if (!user.providerId) {
+      user.authProvider = "github";
+      user.providerId = githubUser.id.toString();
+      await user.save();
+    }
+
+    const token = await user.getJWT();
+    const isProduction = process.env.NODE_ENV === "production";
+    res.cookie("token", token, {
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
+    });
+    const userResponseData = user.toJSON();
+    userResponseData.isNewUser = isNewUser;
+    
+    res.send(userResponseData);
+  } catch (err) {
+    const githubMessage = err.response?.data?.message;
+    const status = err.response?.status || 400;
+    res.status(status).send("GitHub Auth Error: " + (githubMessage || err.message));
+  }
 });
 
 module.exports = authRouter;
