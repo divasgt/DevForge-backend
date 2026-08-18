@@ -2,10 +2,15 @@ const socket = require("socket.io");
 const { allowedOrigins } = require("./constants");
 const crypto = require("crypto");
 const Chat = require("../models/chat");
+const jwt = require("jsonwebtoken");
 
 // using crypto to create hash to create a complex roomId, so any hacker can't guess
 const getSecretRoomId = (userId, targetUserId) => {
-  return crypto.createHash("sha256").update([userId, targetUserId].sort().join("&")).digest("hex");
+  // below we did sort() because we need roomId to be same in both cases when userA creates room to msg userB and when userB creates room to msg userA.
+  return crypto
+    .createHash("sha256")
+    .update([userId.toString(), targetUserId.toString()].sort().join("&"))
+    .digest("hex");
 };
 
 const initializeSocket = (server) => {
@@ -13,22 +18,50 @@ const initializeSocket = (server) => {
   const io = socket(server, {
     cors: {
       origin: allowedOrigins,
+      credentials: true,
     },
+  });
+
+  // Socket Authentication Middleware
+  io.use((socket, next) => {
+    try {
+      const cookieString = socket.request.headers.cookie;
+      if (!cookieString) throw new Error("No cookies found");
+
+      // Parse cookies manually
+      const cookies = cookieString.split(";").reduce((res, item) => {
+        const data = item.trim().split("=");
+        return { ...res, [data[0]]: data[1] };
+      }, {});
+
+      const token = cookies.token;
+      if (!token) throw new Error("Token missing");
+
+      const decodedObj = jwt.verify(token, process.env.JWT_SECRET);
+      socket.user = decodedObj; // attach decoded user data (_id) to socket
+      next();
+    } catch (err) {
+      console.error("Socket Auth Error:", err.message);
+      next(new Error("Authentication error"));
+    }
   });
 
   // to start listening to connections
   io.on("connection", (socket) => {
     // Event handlers
-    socket.on("joinChat", ({ firstName, userId, targetUserId }) => {
-      // below we did sort() because we need roomId to be same in both cases when userA creates room to msg userB and when userB creates room to msg userA.
+    socket.on("joinChat", ({ firstName, targetUserId }) => {
+      // Use the authenticated user's ID, ignore whatever the client sent
+      const userId = socket.user._id;
+
       const roomId = getSecretRoomId(userId, targetUserId);
       console.log(`${firstName} joined the room: ${roomId}`);
 
       socket.join(roomId);
     });
 
-    socket.on("sendMessage", async ({ firstName, userId, targetUserId, text }) => {
+    socket.on("sendMessage", async ({ firstName, targetUserId, text }) => {
       try {
+        const userId = socket.user._id;
         const roomId = getSecretRoomId(userId, targetUserId);
         console.log(`${firstName} sent message: ${text}`);
 
