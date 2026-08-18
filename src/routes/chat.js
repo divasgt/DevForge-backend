@@ -36,4 +36,24 @@ chatRouter.get("/chat/:targetUserId", userAuth, async (req, res) => {
   }
 });
 
+// fetch all chats for a user
+chatRouter.get("/chats", userAuth, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Find all chats where the user is a participant
+    const chats = await Chat.find({
+      participants: userId,
+    }).populate({
+      path: "participants",
+      select: "firstName lastName photoUrl",
+    });
+
+    res.json({ data: chats, message: "Chats fetched successfully!" });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: "Error fetching chats: " + err.message });
+  }
+});
+
 module.exports = chatRouter;
