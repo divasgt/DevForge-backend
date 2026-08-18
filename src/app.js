@@ -10,6 +10,7 @@ const cors = require("cors");
 const http = require("http");
 const initializeSocket = require("./utils/socket");
 const { allowedOrigins } = require("./utils/constants");
+const chatRouter = require("./routes/chat");
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
 app.use("/", userRouter);
+app.use("/", chatRouter);
 
 // ----For Socket.io----
 const server = http.createServer(app);

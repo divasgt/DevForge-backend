@@ -1,6 +1,7 @@
 const socket = require("socket.io");
 const { allowedOrigins } = require("./constants");
 const crypto = require("crypto");
+const Chat = require("../models/chat");
 
 // using crypto to create hash to create a complex roomId, so any hacker can't guess
 const getSecretRoomId = (userId, targetUserId) => {
@@ -26,11 +27,32 @@ const initializeSocket = (server) => {
       socket.join(roomId);
     });
 
-    socket.on("sendMessage", ({ firstName, userId, targetUserId, text }) => {
-      const roomId = getSecretRoomId(userId, targetUserId);
-      console.log(`${firstName} sent message: ${text}`);
+    socket.on("sendMessage", async ({ firstName, userId, targetUserId, text }) => {
+      try {
+        const roomId = getSecretRoomId(userId, targetUserId);
+        console.log(`${firstName} sent message: ${text}`);
 
-      io.to(roomId).emit("messageRecieved", { firstName, text });
+        // Save message to db
+        let chat = await Chat.findOne({
+          participants: { $all: [userId, targetUserId] },
+        });
+
+        // create chat if it does not exist
+        if (!chat) {
+          chat = new Chat({
+            participants: [userId, targetUserId],
+            messages: [],
+          });
+        }
+
+        // push the new message to chat
+        chat.messages.push({ senderId: userId, text });
+        await chat.save();
+
+        io.to(roomId).emit("messageRecieved", { firstName, text });
+      } catch (err) {
+        console.error(err.message);
+      }
     });
 
     socket.on("disconnect", () => {});
