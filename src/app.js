@@ -7,14 +7,14 @@ const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/request");
 const userRouter = require("./routes/user");
 const cors = require("cors");
+const http = require("http");
+const initializeSocket = require("./utils/socket");
+const { allowedOrigins } = require("./utils/constants");
 
 const app = express();
 
 // Trust reverse proxy (needed for secure cookies in production behind Render/Heroku/Vercel)
 app.set("trust proxy", 1);
-
-// allowed origins
-const allowedOrigins = [process.env.FRONTEND_URL, "http://localhost:5173"];
 
 // to allow requests from specified origins (frontend)
 app.use(
@@ -35,12 +35,16 @@ app.use("/", profileRouter);
 app.use("/", requestRouter);
 app.use("/", userRouter);
 
+// ----For Socket.io----
+const server = http.createServer(app);
+initializeSocket(server);
+
 connectDB()
   .then(() => {
     console.log("Database connected successfully!");
 
     const port = process.env.PORT || 7777;
-    app.listen(port, () => {
+    server.listen(port, () => {
       console.log(`Server is successfully listening on port ${port}...`);
     });
   })
