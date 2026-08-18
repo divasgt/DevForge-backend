@@ -44,10 +44,12 @@ chatRouter.get("/chats", userAuth, async (req, res) => {
     // Find all chats where the user is a participant
     const chats = await Chat.find({
       participants: userId,
-    }).populate({
-      path: "participants",
-      select: "firstName lastName photoUrl",
-    });
+    })
+      .populate({
+        path: "participants",
+        select: "firstName lastName photoUrl",
+      })
+      .sort({ updatedAt: -1 });
 
     res.json({ data: chats, message: "Chats fetched successfully!" });
   } catch (err) {
